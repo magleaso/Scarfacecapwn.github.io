@@ -4,9 +4,9 @@
  */
 $(document).ready(function() {
     /** the directory path containing images of ladiez */
-    var LADIEZ_IMAGE_DIR = 'static/images/ladiez';
+    var LADIEZ_IMAGE_DIR = 'c_or_l/static/images/ladiez';
     /** the directory path containing image of chooper */
-    var CHOOPER_IMAGE_DIR = 'static/images/chooper';
+    var CHOOPER_IMAGE_DIR = 'c_or_l/static/images/chooper';
     /** number of ms before player loses.
      *  This is just the initial value, it decreases as the game goes on
      */
@@ -113,8 +113,8 @@ $(document).ready(function() {
      *  assumes that any other buttons have been removed
      */
     function insertDefaultButtons() {
-	$("#buttons").after('<img class="button ladiez" src="static/images/buttons/button_ladiez_default.jpg" />');
-	$("#buttons").after('<img class="button chooper" src="static/images/buttons/button_chooper_default.jpg" />');
+	$("#buttons").after('<img class="button ladiez" src="c_or_l/static/images/buttons/button_ladiez_default.jpg" />');
+	$("#buttons").after('<img class="button chooper" src="c_or_l/static/images/buttons/button_chooper_default.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -123,7 +123,7 @@ $(document).ready(function() {
     function insertGreenButton() {
 	var match = $('.button.' + gameImageClass)
 	match.replaceWith(
-		'<img class="button ' + gameImageClass + '" src="static/images/buttons/button_' + gameImageClass + '_correct.jpg" />');
+		'<img class="button ' + gameImageClass + '" src="c_or_l/static/images/buttons/button_' + gameImageClass + '_correct.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -133,7 +133,7 @@ $(document).ready(function() {
 	// if user guessed and was wrong, insert red button in OTHER class
 	var otherClass = gameImageClass === 'chooper' ? 'ladiez' : 'chooper';
 	$('.button.' + otherClass).replaceWith(
-		'<img class="button ' + otherClass + '" src="static/images/buttons/button_' + otherClass+ '_incorrect.jpg" />');
+		'<img class="button ' + otherClass + '" src="c_or_l/static/images/buttons/button_' + otherClass+ '_incorrect.jpg" />');
     }
 
 
