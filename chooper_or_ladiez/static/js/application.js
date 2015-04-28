@@ -11,10 +11,14 @@ $(document).ready(function() {
     /** number of ms before player loses.
      *  This is just the initial value, it decreases as the game goes on
      */
-    var TIMER_DURATION = 2000; 
+    var INITIAL_DURATION = 5000; 
+	// sped up timer
+	var currentDuration = INITIAL_DURATION;
+	//difficulty scale determines how quickly timer decreases
+	var difficulty = 1.1;
     /** the timer */
     var timer; 
-
+	
     /* chooper and ladiez images are numbered from 0 to nChooperImages-1 and nLadiezImages-1
      * respectively
      */
@@ -39,22 +43,37 @@ $(document).ready(function() {
 	gameOver = false;
 	insertRandomGameImage();
 	insertDefaultButtons();
-	timer = setTimeout(lose, TIMER_DURATION);
+	nextSecond(INITIAL_DURATION);
     }
-
+	//Phased out reset because it was causing issue with timer -Mg
     /** resets the game (i.e. the game has already been played
      *  and lost at least once)
      */
-    function reset() {
+    /** function reset() {
 	score = 0;
 	gameOver = false;
 	$('.loserOverlay').css('visibility', 'hidden');
 	clearImages();
 	insertRandomGameImage();
 	insertDefaultButtons();
-	timer = setTimeout(lose, TIMER_DURATION);
-    }
+    } */
 
+	function nextSecond(secondsleft) {
+	/** display seconds left on timer as int */
+	$('.timer').text(parseInt(secondsleft/1000, 10));
+	/** prepare to send to lose state */
+	if(secondsleft == 0) {
+		/** send to lose state after remaining time expires */
+		timer = setTimeout(lose(), 1);
+	/** case where timer duration is not a whole number of seconds */
+	} else if(secondsleft % 1000 != 0) {
+		/** update the time again when the timer hits whole number seconds */
+		timer = setTimeout(nextSecond, secondsleft % 1000, secondsleft - (secondsleft % 1000));
+	} else {
+		/** increment the time normally */
+		timer = setTimeout(nextSecond, 1000, secondsleft - 1000);
+		}
+	}
     /** called whenever the player loses */
     function lose() {
 	clearTimeout(timer);
@@ -133,8 +152,11 @@ $(document).ready(function() {
 	if(gameOver) {
 	    // we are in the losing state, any keypress means
 	    // the user wants to play again
-	    reset();
-	} else {
+		// Next 2 lines replace the reset() functionality
+		clearImages();
+		$('.loserOverlay').css('visibility', 'hidden');
+		init();
+		} else {
 	    // game only responds to 'z' or 'x' keypresses
 	    if(event.which != 90 && event.which != 88) {
 		return;
@@ -156,7 +178,9 @@ $(document).ready(function() {
 		    insertDefaultButtons();
 
 		    $(".score").text(++score);
-		    timer = setTimeout(lose, TIMER_DURATION);
+			// start timer again with less time
+			currentDuration = currentDuration/difficulty;
+		    nextSecond(currentDuration);
 		}, 500);
 	    }
 	}

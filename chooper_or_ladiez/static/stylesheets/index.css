@@ -60,3 +60,11 @@ div.score {
     z-index: 11;
 }
 
+div.timer {
+    float: left;
+    padding-top: 5px;
+    padding-left: 10px;
+    font-size: 36pt;
+    z-index: 1;
+}
+
