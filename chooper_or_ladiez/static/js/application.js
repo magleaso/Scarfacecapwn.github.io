@@ -1,6 +1,5 @@
 /** TODO:
  *    - keep local high score
- *    - make timer speed up
  *    - moar pics
  */
 $(document).ready(function() {
