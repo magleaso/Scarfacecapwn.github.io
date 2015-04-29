@@ -17,6 +17,8 @@ $(document).ready(function() {
 	var difficulty = 1.1;
     /** the timer */
     var timer; 
+    // store past values for images to avoid repeats
+    var nlast;
 	
     /* chooper and ladiez images are numbered from 0 to nChooperImages-1 and nLadiezImages-1
      * respectively
@@ -96,12 +98,22 @@ $(document).ready(function() {
 
 	if(chooperOrLadiez < 0.5) { // choose chooper
 	    var n = Math.floor(Math.random() * nChooperImages);
+	    // check if image is the same and regenerate if so
+	    while(n == nlast) {
+	    	n = Math.floor(Math.random() * nChooperImages);
+	    }
 	    imgSrc = CHOOPER_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'chooper';
+	    // store last used image
+	    nlast = n;
 	} else { // choose ladiez
 	    var n = Math.floor(Math.random() * nLadiezImages);
+	    while(n == nlast) {
+	    	n = Math.floor(Math.random() * nChooperImages);
+	    }
 	    imgSrc = LADIEZ_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'ladiez';
+	    nlast = n;
 	}
 
 	var imgSrc = 
