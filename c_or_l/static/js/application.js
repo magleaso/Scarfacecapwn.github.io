@@ -154,6 +154,7 @@ $(document).ready(function() {
 		// Next 2 lines replace the reset() functionality
 		clearImages();
 		$('.loserOverlay').css('visibility', 'hidden');
+		currentDuration = INITIAL_DURATION;
 		init();
 		} else {
 	    // game only responds to 'z' or 'x' keypresses
