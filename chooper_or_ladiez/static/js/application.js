@@ -1,5 +1,6 @@
 /** TODO:
  *    - keep local high score
+ *    - don't load the same pic twice in a row
  *    - make timer speed up
  *    - moar pics
  */
