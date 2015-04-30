@@ -14,9 +14,9 @@ $(document).ready(function() {
 	// sped up timer
 	var currentDuration = INITIAL_DURATION;
 	// minimum time value that timer will not start below
-	var minTime = 1
+	var MIN_TIME = 1
 	// difficulty scale determines how quickly timer decreases
-	var difficulty = 1.1;
+	var DIFFICULTY = 1.1;
     /** the timer */
     var timer; 
     // store past values for images to avoid repeats
@@ -193,10 +193,10 @@ $(document).ready(function() {
 
 		    $(".score").text(++score);
 			// start timer again with less time
-			if(currentDuration/difficulty >= minTime){
-				currentDuration = currentDuration/difficulty;
+			if(currentDuration/DIFFICULTY >= MIN_TIME){
+				currentDuration = currentDuration/DIFFICULTY;
 		    } else {
-		    	currentDuration = minTime;
+		    	currentDuration = MIN_TIME;
 		    }
 		    nextSecond(currentDuration);
 		}, 500);
