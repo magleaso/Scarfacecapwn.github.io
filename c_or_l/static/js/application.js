@@ -1,21 +1,25 @@
 /** TODO:
  *    - keep local high score
- *    - don't load the same pic twice in a row
- *    - make timer speed up
  *    - moar pics
  */
 $(document).ready(function() {
     /** the directory path containing images of ladiez */
-    var LADIEZ_IMAGE_DIR = 'static/images/ladiez';
+    var LADIEZ_IMAGE_DIR = 'c_or_l/static/images/ladiez';
     /** the directory path containing image of chooper */
-    var CHOOPER_IMAGE_DIR = 'static/images/chooper';
+    var CHOOPER_IMAGE_DIR = 'c_or_l/static/images/chooper';
     /** number of ms before player loses.
      *  This is just the initial value, it decreases as the game goes on
      */
-    var TIMER_DURATION = 2000; 
+    var INITIAL_DURATION = 5000; 
+	// sped up timer
+	var currentDuration = INITIAL_DURATION;
+	//difficulty scale determines how quickly timer decreases
+	var difficulty = 1.1;
     /** the timer */
     var timer; 
-
+    // store past values for images to avoid repeats
+    var nlast;
+	
     /* chooper and ladiez images are numbered from 0 to nChooperImages-1 and nLadiezImages-1
      * respectively
      */
@@ -40,22 +44,37 @@ $(document).ready(function() {
 	gameOver = false;
 	insertRandomGameImage();
 	insertDefaultButtons();
-	timer = setTimeout(lose, TIMER_DURATION);
+	nextSecond(INITIAL_DURATION);
     }
-
+	//Phased out reset because it was causing issue with timer -Mg
     /** resets the game (i.e. the game has already been played
      *  and lost at least once)
      */
-    function reset() {
+    /** function reset() {
 	score = 0;
 	gameOver = false;
 	$('.loserOverlay').css('visibility', 'hidden');
 	clearImages();
 	insertRandomGameImage();
 	insertDefaultButtons();
-	timer = setTimeout(lose, TIMER_DURATION);
-    }
+    } */
 
+	function nextSecond(secondsleft) {
+	/** display seconds left on timer as int */
+	$('.timer').text(parseInt(secondsleft/1000, 10));
+	/** prepare to send to lose state */
+	if(secondsleft == 0) {
+		/** send to lose state after remaining time expires */
+		timer = setTimeout(lose(), 1);
+	/** case where timer duration is not a whole number of seconds */
+	} else if(secondsleft % 1000 != 0) {
+		/** update the time again when the timer hits whole number seconds */
+		timer = setTimeout(nextSecond, secondsleft % 1000, secondsleft - (secondsleft % 1000));
+	} else {
+		/** increment the time normally */
+		timer = setTimeout(nextSecond, 1000, secondsleft - 1000);
+		}
+	}
     /** called whenever the player loses */
     function lose() {
 	clearTimeout(timer);
@@ -79,12 +98,22 @@ $(document).ready(function() {
 
 	if(chooperOrLadiez < 0.5) { // choose chooper
 	    var n = Math.floor(Math.random() * nChooperImages);
+	    // check if image is the same and regenerate if so
+	    while(n == nlast) {
+	    	n = Math.floor(Math.random() * nChooperImages);
+	    }
 	    imgSrc = CHOOPER_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'chooper';
+	    // store last used image
+	    nlast = n;
 	} else { // choose ladiez
 	    var n = Math.floor(Math.random() * nLadiezImages);
+	    while(n == nlast) {
+	    	n = Math.floor(Math.random() * nChooperImages);
+	    }
 	    imgSrc = LADIEZ_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'ladiez';
+	    nlast = n;
 	}
 
 	var imgSrc = 
@@ -96,8 +125,8 @@ $(document).ready(function() {
      *  assumes that any other buttons have been removed
      */
     function insertDefaultButtons() {
-	$("#buttons").after('<img class="button ladiez" src="static/images/buttons/button_ladiez_default.jpg" />');
-	$("#buttons").after('<img class="button chooper" src="static/images/buttons/button_chooper_default.jpg" />');
+	$("#buttons").after('<img class="button ladiez" src="c_or_l/static/images/buttons/button_ladiez_default.jpg" />');
+	$("#buttons").after('<img class="button chooper" src="c_or_l/static/images/buttons/button_chooper_default.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -106,7 +135,7 @@ $(document).ready(function() {
     function insertGreenButton() {
 	var match = $('.button.' + gameImageClass)
 	match.replaceWith(
-		'<img class="button ' + gameImageClass + '" src="static/images/buttons/button_' + gameImageClass + '_correct.jpg" />');
+		'<img class="button ' + gameImageClass + '" src="c_or_l/static/images/buttons/button_' + gameImageClass + '_correct.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -116,7 +145,7 @@ $(document).ready(function() {
 	// if user guessed and was wrong, insert red button in OTHER class
 	var otherClass = gameImageClass === 'chooper' ? 'ladiez' : 'chooper';
 	$('.button.' + otherClass).replaceWith(
-		'<img class="button ' + otherClass + '" src="static/images/buttons/button_' + otherClass+ '_incorrect.jpg" />');
+		'<img class="button ' + otherClass + '" src="c_or_l/static/images/buttons/button_' + otherClass+ '_incorrect.jpg" />');
     }
 
 
@@ -134,8 +163,12 @@ $(document).ready(function() {
 	if(gameOver) {
 	    // we are in the losing state, any keypress means
 	    // the user wants to play again
-	    reset();
-	} else {
+		// Next 2 lines replace the reset() functionality
+		clearImages();
+		$('.loserOverlay').css('visibility', 'hidden');
+		currentDuration = INITIAL_DURATION;
+		init();
+		} else {
 	    // game only responds to 'z' or 'x' keypresses
 	    if(event.which != 90 && event.which != 88) {
 		return;
@@ -157,7 +190,9 @@ $(document).ready(function() {
 		    insertDefaultButtons();
 
 		    $(".score").text(++score);
-		    timer = setTimeout(lose, TIMER_DURATION);
+			// start timer again with less time
+			currentDuration = currentDuration/difficulty;
+		    nextSecond(currentDuration);
 		}, 500);
 	    }
 	}
