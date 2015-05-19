@@ -1,6 +1,8 @@
 /** TODO:
  *    - keep local high score
  *    - moar pics
+ *    - timer object?
+ *    - make buttons clickable (for mobile)
  */
 $(document).ready(function() {
     /** the directory path containing images of ladiez */
@@ -11,14 +13,18 @@ $(document).ready(function() {
      *  This is just the initial value, it decreases as the game goes on
      */
     var INITIAL_DURATION = 5000; 
-	// sped up timer
-	var currentDuration = INITIAL_DURATION;
-	//difficulty scale determines how quickly timer decreases
-	var difficulty = 1.1;
-    /** the timer */
+    /** minimum number of ms before player can lose */
+    var MINIMUM_DURATION = 1000;
+    /** current number of seconds before player loses */
+    var currentDuration = INITIAL_DURATION;
+    /** determines how quickly currentDuration decreases */
+    var difficulty = 0.9;
+    /** the value of Date.now() when the timer was reset, used for calculating deltas */
+    var startTime;
+    /** holds the id of the interval that calls updateTimer() */
     var timer; 
-    // store past values for images to avoid repeats
-    var nlast;
+    /** is the timer paused */
+    var timerPaused;
 	
     /* chooper and ladiez images are numbered from 0 to nChooperImages-1 and nLadiezImages-1
      * respectively
@@ -28,6 +34,8 @@ $(document).ready(function() {
     var nLadiezImages = 20;
     /** the number of images of chooper */
     var nChooperImages = 23;
+    /** store past values for images to avoid repeats */
+    var nlast;
     /** the player's score */
     var score;
     /** The class of the currently visible game image */
@@ -44,40 +52,70 @@ $(document).ready(function() {
 	gameOver = false;
 	insertRandomGameImage();
 	insertDefaultButtons();
-	nextSecond(INITIAL_DURATION);
+
+	resetTimer(INITIAL_DURATION);
+	timer = setInterval(updateTimer, 10);
     }
-	//Phased out reset because it was causing issue with timer -Mg
+
     /** resets the game (i.e. the game has already been played
      *  and lost at least once)
      */
-    /** function reset() {
+    function reset() {
 	score = 0;
+	$('.score').text(score);
 	gameOver = false;
 	$('.loserOverlay').css('visibility', 'hidden');
 	clearImages();
 	insertRandomGameImage();
 	insertDefaultButtons();
-    } */
 
-	function nextSecond(secondsleft) {
-	/** display seconds left on timer as int */
-	$('.timer').text(parseInt(secondsleft/1000, 10));
-	/** prepare to send to lose state */
-	if(secondsleft == 0) {
-		/** send to lose state after remaining time expires */
-		timer = setTimeout(lose(), 1);
-	/** case where timer duration is not a whole number of seconds */
-	} else if(secondsleft % 1000 != 0) {
-		/** update the time again when the timer hits whole number seconds */
-		timer = setTimeout(nextSecond, secondsleft % 1000, secondsleft - (secondsleft % 1000));
-	} else {
-		/** increment the time normally */
-		timer = setTimeout(nextSecond, 1000, secondsleft - 1000);
-		}
+	resetTimer(INITIAL_DURATION);
+	timer = setInterval(updateTimer, 10);
+    }
+
+    /** updates the timer display */
+    function updateTimer() {
+	if(timerPaused) {
+	    console.log('timer paused');
+	    return;
 	}
+
+	// get the elapsed time
+	var millisElapsed = Date.now() - startTime;
+
+	if(currentDuration - millisElapsed <= 0) {
+	    // avoid the timer displaying negative values
+	    $('.timer').text('0.00');
+	    lose();
+	} else {
+	    var roundedElapsedTime = Math.round((currentDuration-millisElapsed)/10)/100;
+	    $('.timer').text(roundedElapsedTime);
+	}
+    }
+
+    /** reset the timer to <duration> milliseconds */
+    function resetTimer(duration) {
+	if(duration >= MINIMUM_DURATION)
+	    currentDuration = duration;
+	else
+	    currentDuration = MINIMUM_DURATION;
+	console.log('set duration to ' + currentDuration);
+	startTime = Date.now();
+    }
+
+    /** pause the timer */
+    function pauseTimer() {
+	timerPaused = true;
+    }
+
+    /** unpause the timer */
+    function unpauseTimer() {
+	timerPaused = false;
+    }
+
     /** called whenever the player loses */
     function lose() {
-	clearTimeout(timer);
+	clearInterval(timer);
 	gameOver = true;
 	$('.loserOverlay').css('visibility', 'visible');
     }
@@ -95,29 +133,26 @@ $(document).ready(function() {
     function insertRandomGameImage() {
 	var imgSrc;
 	var chooperOrLadiez = Math.random();
+	var n = nlast;
 
 	if(chooperOrLadiez < 0.5) { // choose chooper
-	    var n = Math.floor(Math.random() * nChooperImages);
 	    // check if image is the same and regenerate if so
 	    while(n == nlast) {
 	    	n = Math.floor(Math.random() * nChooperImages);
 	    }
 	    imgSrc = CHOOPER_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'chooper';
-	    // store last used image
-	    nlast = n;
 	} else { // choose ladiez
-	    var n = Math.floor(Math.random() * nLadiezImages);
 	    while(n == nlast) {
-	    	n = Math.floor(Math.random() * nChooperImages);
+	    	n = Math.floor(Math.random() * nLadiezImages);
 	    }
 	    imgSrc = LADIEZ_IMAGE_DIR + '/' + n + '.jpg';
 	    gameImageClass = 'ladiez';
-	    nlast = n;
 	}
+	// store last used image
+	nlast = n;
 
-	var imgSrc = 
-	$('#gameImage').after(
+	var imgSrc = $('#gameImage').after(
 	    '<img class="' + gameImageClass + '" src="' + imgSrc + '" width="300" height="400"/>');
     }
 
@@ -163,12 +198,8 @@ $(document).ready(function() {
 	if(gameOver) {
 	    // we are in the losing state, any keypress means
 	    // the user wants to play again
-		// Next 2 lines replace the reset() functionality
-		clearImages();
-		$('.loserOverlay').css('visibility', 'hidden');
-		currentDuration = INITIAL_DURATION;
-		init();
-		} else {
+	    reset();
+	} else {
 	    // game only responds to 'z' or 'x' keypresses
 	    if(event.which != 90 && event.which != 88) {
 		return;
@@ -180,7 +211,9 @@ $(document).ready(function() {
 		insertRedButton();
 		lose();
 	    } else {
-		clearTimeout(timer);
+		// if the player makes the correct choice with less than 500ms to spare
+		// they will lose anyway, unless the timer is paused
+		pauseTimer();
 		insertGreenButton();
 		// delay the execution of the rest of the branch by 500ms
 		// gives the user time to see the green button
@@ -190,9 +223,8 @@ $(document).ready(function() {
 		    insertDefaultButtons();
 
 		    $(".score").text(++score);
-			// start timer again with less time
-			currentDuration = currentDuration/difficulty;
-		    nextSecond(currentDuration);
+		    unpauseTimer();
+		    resetTimer(currentDuration*difficulty);
 		}, 500);
 	    }
 	}
