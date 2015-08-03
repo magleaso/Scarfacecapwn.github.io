@@ -1,5 +1,4 @@
 // TODO:
-// - add music
 // - better collision detection (both for cakes and gorillas)
 //
 $(document).ready(function() {
@@ -15,6 +14,7 @@ $(document).ready(function() {
     var chooper_head = $('#chooper_head')[0];
     var cake = $('#cake')[0];
     var gorilla = $('#gorilla')[0];
+    var greatArm = $('#greatArm')[0];
     var background = $('#background')[0];
     // variables concerning chooper's head
     var hscale = h/3/chooper_head.height;
@@ -27,6 +27,11 @@ $(document).ready(function() {
     var mouthy = 297/397*hh;
     var mouthw = (163-77)/254*hw;
     var mouthh = (343-297)/397*hh;
+    
+    var armx = 77/254*hw;
+    var army = 297/397*hh;
+    var armw = (163-77)/254*hw*5;
+    var armh = (343-297)/397*hh;
 
     // mmm cakez
     var cakes;
@@ -46,7 +51,7 @@ $(document).ready(function() {
     var spin_cost = 1;
     var damage_cost = 25;
 
-    var leftPressed, rightPressed, upPressed, downPressed, spin;
+    var leftPressed, rightPressed, upPressed, downPressed, spin, arm;
     var logToggle;
 
     function addCake() {
@@ -112,6 +117,7 @@ $(document).ready(function() {
 	upPressed = false;
 	downPressed = false;
 	spin = false;
+	arm = false;
 	logToggle = false;
 
 	gameStart = Date.now();
@@ -125,6 +131,8 @@ $(document).ready(function() {
 	if(rightPressed) hx += 10;
 	if(upPressed) hy -= 10;
 	if(downPressed) hy += 10;
+	if(!spacePressed) army = -50;
+	if(spacePressed) army = 297/397*hh;
 
 	if(hx < 0) hx = 0;
 	if(hx+hw >= w) hx = w-hw;
@@ -192,6 +200,9 @@ $(document).ready(function() {
 	gorillas.forEach(function(v, i, a) {
 	    ctx.drawImage(gorilla, v.x, v.y, gorilla_size, gorilla_size);
 	});
+
+	if(spacePressed) ctx.drawImage(greatArm, 77/254*hw + hx + 20, 297/397*hh + hy, armw, armh);
+
 	// draw score
 	ctx.font = "40px Comic Sans MS";
 	ctx.fillStyle = "white";
@@ -219,7 +230,6 @@ $(document).ready(function() {
 
     $(document).keydown(function(e) {
 	var key = e.which;
-	// left/A, up/W, right/D, down/S, spacebar
 	if(key == '37' || key == '65') leftPressed = true;
 	if(key == '38' || key == '87') upPressed = true;
 	if(key == '39' || key == '68') rightPressed = true;
