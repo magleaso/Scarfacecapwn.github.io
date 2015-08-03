@@ -11,6 +11,7 @@ $(document).ready(function() {
 
     var chooper_head = $('#chooper_head')[0];
     var cake = $('#cake')[0];
+    var greatArm = $('#greatArm')[0];
     // variables concerning chooper's head
     var hscale = 180/chooper_head.height;
     var hw = chooper_head.width*hscale;
@@ -21,6 +22,11 @@ $(document).ready(function() {
     var mouthy = 297/397*hh;
     var mouthw = (163-77)/254*hw;
     var mouthh = (343-297)/397*hh;
+    
+    var armx = 77/254*hw;
+    var army = 297/397*hh;
+    var armw = (163-77)/254*hw*5;
+    var armh = (343-297)/397*hh;
 
     // mmm cakez
     var cakes;
@@ -29,7 +35,7 @@ $(document).ready(function() {
 
     var score;
 
-    var leftPressed, rightPressed, upPressed, downPressed;
+    var leftPressed, rightPressed, upPressed, downPressed, spacePressed;
 
     function addCake() {
 	var y = Math.random() * (h-50-mouthy) + mouthy;
@@ -58,6 +64,7 @@ $(document).ready(function() {
 	rightPressed = false;
 	upPressed = false;
 	downPressed = false;
+	spacePressed = false;
 
 	if(typeof gameloop != undefined) clearInterval(gameloop);
 	var gameloop = setInterval(update, 60);
@@ -69,6 +76,8 @@ $(document).ready(function() {
 	if(rightPressed) hx += 10;
 	if(upPressed) hy -= 10;
 	if(downPressed) hy += 10;
+	if(!spacePressed) army = -50;
+	if(spacePressed) army = 297/397*hh;
 
 	if(hx < 0) hx = 0;
 	if(hx+hw >= w) hx = w-hw;
@@ -78,7 +87,7 @@ $(document).ready(function() {
 	var i = 0;
 	while(i < cakes.length) {
 	    cakes[i].x -= 10;
-	    if(intersect(cakes[i].x,cakes[i].y, 50, 50, mouthx+hx, mouthy+hy, mouthw,mouthh)) {
+	    if(intersect(cakes[i].x,cakes[i].y, 50, 50, mouthx+hx, mouthy+hy, mouthw,mouthh) || (intersect(cakes[i].x,cakes[i].y, 50, 50, mouthx+hx, mouthy+hy, mouthw*5,mouthh) && (spacePressed == true))) {
 		cakes_eaten++;
 		score += 10;
 		cakes.splice(i, 1);
@@ -101,6 +110,9 @@ $(document).ready(function() {
 	cakes.forEach(function(v, i, a) {
 	    ctx.drawImage(cake, v.x, v.y, 50, 50);
 	});
+
+	if(spacePressed) ctx.drawImage(greatArm, 77/254*hw + hx + 20, 297/397*hh + hy, armw, armh);
+
 	// draw score
 	ctx.font = "20px Comic Sans";
 	ctx.fillText("Score: " + score, 10, 20);
@@ -114,6 +126,7 @@ $(document).ready(function() {
 	if(key == '38') upPressed = true;
 	if(key == '39') rightPressed = true;
 	if(key == '40') downPressed = true;
+	if(key == '32') spacePressed = true;
     });
 
     $(document).keyup(function(e) {
@@ -123,6 +136,7 @@ $(document).ready(function() {
 	if(key == '38') upPressed = false;
 	if(key == '39') rightPressed = false;
 	if(key == '40') downPressed = false;
+	if(key == '32') spacePressed = false;
     });
 
     $(document).keypress(function(e) {
