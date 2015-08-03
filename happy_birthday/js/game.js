@@ -1,5 +1,6 @@
 // TODO:
 // - better collision detection (both for cakes and gorillas)
+// - favicon
 //
 $(document).ready(function() {
     var canvas = $('#canvas')[0];
@@ -14,7 +15,7 @@ $(document).ready(function() {
     var chooper_head = $('#chooper_head')[0];
     var cake = $('#cake')[0];
     var gorilla = $('#gorilla')[0];
-    var greatArm = $('#greatArm')[0];
+    var greatfire = $('#greatfire')[0];
     var background = $('#background')[0];
     // variables concerning chooper's head
     var hscale = h/3/chooper_head.height;
@@ -23,16 +24,15 @@ $(document).ready(function() {
     var hx, hy;
     var hr; // rotation of chooper's head in radians
     // define the hitbox for chooper's mouth
-    var mouthx = 77/254*hw;
-    var mouthy = 297/397*hh;
-    var mouthw = (163-77)/254*hw;
-    var mouthh = (343-297)/397*hh;
-    
-    var armx = 77/254*hw;
-    var army = 297/397*hh;
-    var armw = (163-77)/254*hw*5;
-    var armh = (343-297)/397*hh;
+    var mouthx = 157/354*hw;
+    var mouthy = 417/497*hh;
+    var mouthw = (181-157)/354*hw;
+    var mouthh = (429-417)/497*hh;
 
+    var ar; // rotation of the fire in radians
+    var aw = 133;
+    var ah = 50;
+    
     // mmm cakez
     var cakes;
     var cake_size = h/10;
@@ -51,7 +51,7 @@ $(document).ready(function() {
     var spin_cost = 1;
     var damage_cost = 25;
 
-    var leftPressed, rightPressed, upPressed, downPressed, spin, arm;
+    var leftPressed, rightPressed, upPressed, downPressed, spin, fire;
     var logToggle;
 
     function addCake() {
@@ -99,11 +99,34 @@ $(document).ready(function() {
 	return {x: x, y: y};
     }
 
+    function seek_and_destroy_fire_target() {
+	/* finds and deletes the closest gorilla w/in fire's reach
+	 * returns the position of this gorilla in radians
+	 * If no gorilla is found within fire's reach, no gorillas are
+	 * deleted, and the function returns 0
+	 */
+	var i = 0, r = 0;
+	while(i < gorillas.length) {
+	    var deltax = Math.abs(gorillas[i].x - mouthx);
+	    var deltay = Math.abs(gorillas[i].y - mouthy);
+	    var hyp = Math.sqrt(deltax*deltax + deltay*deltay);
+	    if(hyp <= aw) {
+		r = Math.atan(deltay / deltax);
+		gorillas.splice(i, 1);
+		break;
+	    }
+	    i++;
+	}
+	return r;
+    }
+
     function init() {
 	console.log("Mouth hitbox is " + mouthw + "x" + mouthh);
 	hx = 10;
 	hy = 10;
 	hr = 0;
+
+	ar = 0;
 
 	cakes = [];
 	cakes_eaten = 0;
@@ -117,7 +140,7 @@ $(document).ready(function() {
 	upPressed = false;
 	downPressed = false;
 	spin = false;
-	arm = false;
+	fire = false;
 	logToggle = false;
 
 	gameStart = Date.now();
@@ -127,18 +150,18 @@ $(document).ready(function() {
     }
 
     function update() {
+	// update chooper's head
 	if(leftPressed) hx -= 10;
 	if(rightPressed) hx += 10;
 	if(upPressed) hy -= 10;
 	if(downPressed) hy += 10;
-	if(!spacePressed) army = -50;
-	if(spacePressed) army = 297/397*hh;
 
 	if(hx < 0) hx = 0;
 	if(hx+hw >= w) hx = w-hw;
 	if(hy < 0) hy = 0;
 	if(hy+hh >= h) hy = h-hh;
 
+	// spin
 	if(spin) {
 	    hr += 0.8;
 	    score -= spin_cost;
@@ -146,6 +169,7 @@ $(document).ready(function() {
 	else hr = 0;
 	if(hr > 2*Math.PI) hr -= 2*Math.PI;
 
+	// update cakes
 	var i = 0;
 	while(i < cakes.length) {
 	    if(intersect(cakes[i].x,cakes[i].y, cake_size, cake_size, mouthx+hx, mouthy+hy, mouthw,mouthh)) {
@@ -162,6 +186,7 @@ $(document).ready(function() {
 	}
 	if(Math.random() < cake_spawn_rate) addCake();
 
+	// update gorillas
 	i = 0;
 	while(i < gorillas.length) {
 	    if(intersect(gorillas[i].x, gorillas[i].y, gorilla_size, gorilla_size, hx, hy, hw, hh)) {
@@ -172,11 +197,19 @@ $(document).ready(function() {
 	    }
 	    i++;
 	}
-	var d = Date.now() - gameStart;
-	if(logToggle) console.log(d);
-	if(d > gorilla_spawn_delay &&
+	if(Date.now()-gameStart > gorilla_spawn_delay &&
 		Math.random() < gorilla_spawn_rate) addGorilla();
 
+	// fire (must be after gorillas)
+	/*
+	if(score >= max_score) {
+	    if(fire) {
+		ax += 
+	    ar = seek_and_destroy_fire_target();
+	}
+	*/
+	
+	//paint (or lose)
 	paint();
 	if(score < 0) lose();
     }
@@ -196,13 +229,19 @@ $(document).ready(function() {
 	    ctx.drawImage(cake, v.x, v.y, cake_size, cake_size);
 	});
 	// draw gorillas
-	//ctx.drawImage(gorilla, 100, 100, gorilla_size, gorilla_size);
 	gorillas.forEach(function(v, i, a) {
 	    ctx.drawImage(gorilla, v.x, v.y, gorilla_size, gorilla_size);
 	});
-
-	if(spacePressed) ctx.drawImage(greatArm, 77/254*hw + hx + 20, 297/397*hh + hy, armw, armh);
-
+	// draw chooper's arm
+	/*
+	if(score >= max_score) {
+	    ctx.translate(ax+aw/2, ay+ah/2);
+	    ctx.rotate(ar);
+	    ctx.drawImage(greatfire, -aw/2, -ah/2, aw, ah);
+	    ctx.rotate(-ar);
+	    ctx.translate(-(ax+aw/2), -(ay+ah/2));
+	}
+	*/
 	// draw score
 	ctx.font = "40px Comic Sans MS";
 	ctx.fillStyle = "white";
@@ -235,6 +274,7 @@ $(document).ready(function() {
 	if(key == '39' || key == '68') rightPressed = true;
 	if(key == '40' || key == '83') downPressed = true;
 	if(key == '32') spin = true;
+	if(key == '16') fire = true;
     });
 
     $(document).keyup(function(e) {
@@ -244,6 +284,7 @@ $(document).ready(function() {
 	if(key == '39' || key == '68') rightPressed = false;
 	if(key == '40' || key == '83') downPressed = false;
 	if(key == '32') spin = false;
+	if(key == '16') fire = false;
     });
 
     $(document).keypress(function(e) {
@@ -253,13 +294,4 @@ $(document).ready(function() {
     });
 
     init();
-    /*
-    intersect(0, 0, 100, 100, 10, 10, 200, 50); // yes
-    intersect(0, 0, 50, 50, 51, 51, 3, 3); // no
-    intersect(0, 0, 10, 10, 9, 9, 10, 10); // yes
-    intersect(100, 100, 50, 50, 50, 100, 25, 25); // no
-    intersect(0, 20, 50, 10, 20, 0, 10, 50); // yes
-    intersect(0, 0, 100, 100, 25, 25, 75, 75); // yes
-    intersect(0, 0, 10, 10, 10, 0, 10, 10); // ??
-    */
 });
