@@ -36,11 +36,15 @@ $(document).ready(function() {
     // delay in ms; gives player a chance to eat cakes (i.e. not die immediately)
     var gorilla_spawn_delay = 5000;
 
-    var score;
+    var score, multiplier;
     var max_score = 500;
     var cake_bonus = 15;
     var spin_cost = 1;
     var damage_cost = 25;
+    
+    var movement_rate = 10;
+    var difficulty_scale = 1;
+    var lastScale; // last time the difficulty was scaled
 
     var leftPressed, rightPressed, upPressed, downPressed, spin, fire;
     var logToggle;
@@ -156,6 +160,7 @@ $(document).ready(function() {
 	gorillas = [];
 
 	score = 0;
+	multiplier = 1;
 
 	leftPressed = false;
 	rightPressed = false;
@@ -166,6 +171,7 @@ $(document).ready(function() {
 	logToggle = false;
 
 	gameStart = Date.now();
+	lastScale = Date.now();
 	if(typeof gameloop != undefined) clearInterval(gameloop);
 	gameloop = setInterval(update, 60);
 	paint();
@@ -184,9 +190,9 @@ $(document).ready(function() {
 	if(hy+hh >= h) hy = h-hh;
 
 	// spin
-	if(score > 0 && spin) {
+	if(cakes_eaten > 0 && spin) {
 	    hr += 0.8;
-	    score -= spin_cost;
+	    cakes_eaten -= spin_cost;
 	}
 	else hr = 0;
 	if(hr > 2*Math.PI) hr -= 2*Math.PI;
@@ -195,14 +201,14 @@ $(document).ready(function() {
 	var i = 0;
 	while(i < cakes.length) {
 	    if(intersect(cakes[i].x,cakes[i].y, cake_size, cake_size, mouthx+hx, mouthy+hy, mouthw,mouthh)) {
-		cakes_eaten++;
-		score += cake_bonus;
+		cakes_eaten += 10;
+		score += cake_bonus*multiplier;
 		cakes.splice(i, 1);
 		//console.log("cake was eat! " + cakes_eaten);
 	    } else if(cakes[i].x < -70) {
 		cakes.splice(i, 1);
 	    } else {
-		cakes[i].x -= 10;
+		cakes[i].x -= movement_rate;
 	    }
 	    i++;
 	}
@@ -212,28 +218,32 @@ $(document).ready(function() {
 	i = 0;
 	while(i < gorillas.length) {
 	    if(intersect(gorillas[i].x, gorillas[i].y, gorilla_size, gorilla_size, hx, hy, hw, hh)) {
-		if(spin) gorillas.splice(i, 1);
-		else score -= damage_cost;
+		if(cakes_eaten > 0 && spin) gorillas.splice(i, 1);
+		else cakes_eaten -= damage_cost;
 	    } else {
-		gorillas[i] = getRay(gorillas[i], {x: hx, y: hy}, 5);
+		gorillas[i] = getRay(gorillas[i], {x: hx, y: hy}, 0.5*movement_rate);
 	    }
 	    i++;
 	}
 	if(Date.now()-gameStart > gorilla_spawn_delay &&
 		Math.random() < gorilla_spawn_rate) addGorilla();
 
-	// fire (must be after gorillas)
-	/*
-	if(score >= max_score) {
-	    if(fire) {
-		ax += 
-	    ar = seek_and_destroy_fire_target();
+	// scale difficulty
+	if(lastScale - Date.now() > 1000) {
+	    movement_rate =+ difficulty_scale;
+	    lastScale = Date.now();
 	}
-	*/
+
+	if(cakes_eaten > max_score) {
+	    cakes_eaten = 20;
+	    multiplier++;
+	    
+	}
+	console.log(multiplier);
 	
 	//paint (or lose)
 	paint();
-	if(score < 0) lose();
+	if(cakes_eaten < 0) lose();
     }
 
     function paint() {
@@ -254,24 +264,14 @@ $(document).ready(function() {
 	gorillas.forEach(function(v, i, a) {
 	    ctx.drawImage(gorilla, v.x, v.y, gorilla_size, gorilla_size);
 	});
-	// draw chooper's arm
-	/*
-	if(score >= max_score) {
-	    ctx.translate(ax+aw/2, ay+ah/2);
-	    ctx.rotate(ar);
-	    ctx.drawImage(greatfire, -aw/2, -ah/2, aw, ah);
-	    ctx.rotate(-ar);
-	    ctx.translate(-(ax+aw/2), -(ay+ah/2));
-	}
-	*/
 	// draw score
 	ctx.font = "40px Comic Sans MS";
 	ctx.fillStyle = "white";
-	ctx.fillText(score, 10, 30);
+	ctx.fillText(score + "   x" + multiplier, 10, 30);
 	// draw power bar
-	if(score >= max_score) ctx.fillStyle = "red";
+	if(cakes_eaten >= max_score) ctx.fillStyle = "red";
 	else ctx.fillStyle = "yellow";
-	ctx.fillRect(0, h-25, score*w/max_score, 25);
+	ctx.fillRect(0, h-25, cakes_eaten*w/max_score, 25);
 	// draw power bar label
 	ctx.fillStyle = "blue";
 	ctx.font = "20px Comic Sans MS";
