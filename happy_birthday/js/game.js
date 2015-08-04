@@ -12,22 +12,13 @@ $(document).ready(function() {
     var gameloop; // the gameloop
 
     var music = $('#music')[0];
-    var chooper_head = $('#chooper_head')[0];
-    var cake = $('#cake')[0];
-    var gorilla = $('#gorilla')[0];
-    var greatfire = $('#greatfire')[0];
-    var background = $('#background')[0];
+    // images
+    var chooper_head, cake, gorilla, greatArm, background;
     // variables concerning chooper's head
-    var hscale = h/3/chooper_head.height;
-    var hw = chooper_head.width*hscale;
-    var hh = chooper_head.height*hscale; // 180
-    var hx, hy;
+    var hscale, hw, hh, hx, hy;
     var hr; // rotation of chooper's head in radians
     // define the hitbox for chooper's mouth
-    var mouthx = 157/354*hw;
-    var mouthy = 417/497*hh;
-    var mouthw = (181-157)/354*hw;
-    var mouthh = (429-417)/497*hh;
+    var mouthx, mouthy, mouthw, mouth;
 
     var ar; // rotation of the fire in radians
     var aw = 133;
@@ -120,11 +111,42 @@ $(document).ready(function() {
 	return r;
     }
 
+    function loadImagesAndInit(paths) {
+	var imgs = new Array();
+	var c = 0;
+	paths.forEach(function(path) {
+	    var img = new Image;
+	    img.onload = function() {
+		imgs[path] = img;
+		c++;
+		if(c == paths.length) init();
+	    }
+	    img.src = 'images/' + path + '.png';
+	});
+	return imgs;
+    }
+
     function init() {
-	console.log("Mouth hitbox is " + mouthw + "x" + mouthh);
+	for(key in imgs) {
+	    console.log(key + " has value " + imgs[key]);
+	}
+	chooper_head = imgs['chooper_head'];
+	cake = imgs['cake'];
+	gorilla = imgs['gorilla'];
+	greatArm = imgs['greatArm'];
+	background = imgs['dank_background'];
+
+	hscale = h/3/chooper_head.height;
+	hw = chooper_head.width*hscale;
+	hh = chooper_head.height*hscale;
 	hx = 10;
 	hy = 10;
 	hr = 0;
+
+        mouthx = 157/354*hw;
+        mouthy = 417/497*hh;
+        mouthw = (181-157)/354*hw;
+        mouthh = (429-417)/497*hh;
 
 	ar = 0;
 
@@ -162,7 +184,7 @@ $(document).ready(function() {
 	if(hy+hh >= h) hy = h-hh;
 
 	// spin
-	if(spin) {
+	if(score > 0 && spin) {
 	    hr += 0.8;
 	    score -= spin_cost;
 	}
@@ -269,6 +291,7 @@ $(document).ready(function() {
 
     $(document).keydown(function(e) {
 	var key = e.which;
+	console.log(key);
 	if(key == '37' || key == '65') leftPressed = true;
 	if(key == '38' || key == '87') upPressed = true;
 	if(key == '39' || key == '68') rightPressed = true;
@@ -293,5 +316,5 @@ $(document).ready(function() {
 	if(key == '99') logToggle = !logToggle; // 'c' key
     });
 
-    init();
+    var imgs = loadImagesAndInit(['chooper_head', 'cake', 'gorilla', 'greatArm', 'dank_background']);
 });
