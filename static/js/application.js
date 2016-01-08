@@ -53,8 +53,8 @@ $(document).ready(function() {
 	insertRandomGameImage();
 	insertDefaultButtons();
 
-	/*resetTimer(INITIAL_DURATION);
-	timer = setInterval(updateTimer, 10);*/
+	resetTimer(INITIAL_DURATION);
+	timer = setInterval(updateTimer, 10);
     }
 
     /** resets the game (i.e. the game has already been played
@@ -152,8 +152,8 @@ $(document).ready(function() {
 	// store last used image
 	nlast = n;
 
-	var imgSrc = $('#gameImage').after(
-	    '<img class="' + gameImageClass + '" src="' + imgSrc + '" width="300" height="400"/>');
+	var imgSrc = $('#gameImage').after('<img class="' + gameImageClass + 
+		'" src="' + imgSrc + '" width="300" height="400"/>');
     }
 
     /** inserts the default (white) buttons into the DOM
@@ -161,7 +161,7 @@ $(document).ready(function() {
      */
     function insertDefaultButtons() {
 	$("#buttons").after('<img class="button ladiez" src="../static/images/buttons/button_ladiez_default.jpg" />');
-	$("#buttons").after('<img class="button chooper" id="chooper" src="../static/images/buttons/button_chooper_default.jpg" />');
+	$("#buttons").after('<img class="button chooper" src="../static/images/buttons/button_chooper_default.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -169,8 +169,9 @@ $(document).ready(function() {
      */
     function insertGreenButton() {
 	var match = $('.button.' + gameImageClass)
-	match.replaceWith(
-		'<img class="button ' + gameImageClass + '" src="../static/images/buttons/button_' + gameImageClass + '_correct.jpg" />');
+	match.replaceWith('<img class="button ' + gameImageClass + 
+		'" src="../static/images/buttons/button_' + gameImageClass + 
+		'_correct.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -179,8 +180,9 @@ $(document).ready(function() {
     function insertRedButton() {
 	// if user guessed and was wrong, insert red button in OTHER class
 	var otherClass = gameImageClass === 'chooper' ? 'ladiez' : 'chooper';
-	$('.button.' + otherClass).replaceWith(
-		'<img class="button ' + otherClass + '" src="../static/images/buttons/button_' + otherClass+ '_incorrect.jpg" />');
+	$('.button.' + otherClass).replaceWith('<img class="button ' + otherClass + 
+		'" src="../static/images/buttons/button_' + otherClass +
+		'_incorrect.jpg" />');
     }
 
 
@@ -188,24 +190,37 @@ $(document).ready(function() {
      *  assumes there are images to clear in the first place
      */
     function clearImages() {
-		// clear the button and game images
-		$('#gameImage').next().remove();
-		$('#buttons').next().remove();
-		$('#buttons').next().remove();
+	// clear the button and game images
+	$('#gameImage').next().remove();
+	$('#buttons').next().remove();
+	$('#buttons').next().remove();
     }
 
-    $('body').on('keydown', function(event) {
+
+    init();
+
+    /** unify handling of key and button presses, since the logic
+     *  is 90% the same
+     */
+    $('body').on('click keydown', function(event) {
+	var button = (event.type == 'click' ? event.toElement.className : null);
 	if(gameOver) {
 	    // we are in the losing state, any keypress means
 	    // the user wants to play again
 	    reset();
 	} else {
-	    // game only responds to 'z' or 'x' keypresses
-	    if(event.which != 90 && event.which != 88) {
+	    // game only responds to 'z' or 'x' keypresses, or clicking on one
+	    // of the buttons
+	    if(button == null) {
+		if(event.which != 90 && event.which != 88) return;
+		gameOver = isCorrect(event.which);
+	    }
+	    else if(button == 'button chooper') gameOver = (gameImageClass == 'ladiez');
+	    else if(button == 'button ladiez') gameOver = (gameImageClass == 'chooper');
+	    else {
+		console.log(button);
 		return;
-	    }	
-
-	    gameOver = isCorrect(event.which);
+	    }
 
 	    if(gameOver) {
 		insertRedButton();
@@ -229,65 +244,4 @@ $(document).ready(function() {
 	    }
 	}
     });
-
-   
-    init();
-
-    // only reset in the losing state when clicked anywhere
-    $('body').on("click", function(event){
-    	if(gameOver){
-    		reset();
-    	}
-    });
-
-    // clicking the chooper button is the same thing as pressing z
-    $('body').on("click", '.button.chooper', function(event){
-    	gameOver = (gameImageClass == "ladiez");
-
-    	if(gameOver){
-    		insertRedButton();
-    		lose();
-    	}
-    	else{
-    		pauseTimer();
-    		insertGreenButton();
-
-    		setTimeout(function () {
-			    clearImages();
-			    insertRandomGameImage();
-			    insertDefaultButtons();
-
-			    $(".score").text(++score);
-			    unpauseTimer();
-			    resetTimer(currentDuration*difficulty);
-			}, 500);
-    	}
-    });
-
-    // clicking the ladiez button is the same thing as pressing x
-    $('body').on("click", '.button.ladiez', function(event){
-    	gameOver = (gameImageClass == "chooper");
-
-    	if(gameOver){
-    		insertRedButton();
-    		lose();
-    	}
-    	else{
-    		pauseTimer();
-    		insertGreenButton();
-
-    		setTimeout(function () {
-			    clearImages();
-			    insertRandomGameImage();
-			    insertDefaultButtons();
-
-			    $(".score").text(++score);
-			    unpauseTimer();
-			    resetTimer(currentDuration*difficulty);
-			}, 500);
-    	}
-    });
-
-    resetTimer(INITIAL_DURATION);
-	timer = setInterval(updateTimer, 10);
 });
