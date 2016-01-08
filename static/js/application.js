@@ -53,8 +53,8 @@ $(document).ready(function() {
 	insertRandomGameImage();
 	insertDefaultButtons();
 
-	resetTimer(INITIAL_DURATION);
-	timer = setInterval(updateTimer, 10);
+	/*resetTimer(INITIAL_DURATION);
+	timer = setInterval(updateTimer, 10);*/
     }
 
     /** resets the game (i.e. the game has already been played
@@ -161,7 +161,7 @@ $(document).ready(function() {
      */
     function insertDefaultButtons() {
 	$("#buttons").after('<img class="button ladiez" src="../static/images/buttons/button_ladiez_default.jpg" />');
-	$("#buttons").after('<img class="button chooper" src="../static/images/buttons/button_chooper_default.jpg" />');
+	$("#buttons").after('<img class="button chooper" id="chooper" src="../static/images/buttons/button_chooper_default.jpg" />');
     }
 
     /** replaces the button of the class specified in <gameImageClass>
@@ -188,10 +188,10 @@ $(document).ready(function() {
      *  assumes there are images to clear in the first place
      */
     function clearImages() {
-	// clear the button and game images
-	$('#gameImage').next().remove();
-	$('#buttons').next().remove();
-	$('#buttons').next().remove();
+		// clear the button and game images
+		$('#gameImage').next().remove();
+		$('#buttons').next().remove();
+		$('#buttons').next().remove();
     }
 
     $('body').on('keydown', function(event) {
@@ -230,5 +230,64 @@ $(document).ready(function() {
 	}
     });
 
+   
     init();
+
+    // only reset in the losing state when clicked anywhere
+    $('body').on("click", function(event){
+    	if(gameOver){
+    		reset();
+    	}
+    });
+
+    // clicking the chooper button is the same thing as pressing z
+    $('body').on("click", '.button.chooper', function(event){
+    	gameOver = (gameImageClass == "ladiez");
+
+    	if(gameOver){
+    		insertRedButton();
+    		lose();
+    	}
+    	else{
+    		pauseTimer();
+    		insertGreenButton();
+
+    		setTimeout(function () {
+			    clearImages();
+			    insertRandomGameImage();
+			    insertDefaultButtons();
+
+			    $(".score").text(++score);
+			    unpauseTimer();
+			    resetTimer(currentDuration*difficulty);
+			}, 500);
+    	}
+    });
+
+    // clicking the ladiez button is the same thing as pressing x
+    $('body').on("click", '.button.ladiez', function(event){
+    	gameOver = (gameImageClass == "chooper");
+
+    	if(gameOver){
+    		insertRedButton();
+    		lose();
+    	}
+    	else{
+    		pauseTimer();
+    		insertGreenButton();
+
+    		setTimeout(function () {
+			    clearImages();
+			    insertRandomGameImage();
+			    insertDefaultButtons();
+
+			    $(".score").text(++score);
+			    unpauseTimer();
+			    resetTimer(currentDuration*difficulty);
+			}, 500);
+    	}
+    });
+
+    resetTimer(INITIAL_DURATION);
+	timer = setInterval(updateTimer, 10);
 });
