@@ -8,7 +8,7 @@ Please don't edit if you aren't sexy. Berries encouraged. Clothing optional.
 
 1. **Who is Chooper?** <br>
    Submit all requests for pics and/or biographical information to chooper@chooper.me
-
+   Example changes!!!!
 
 2. **When are Chooper's make-out office hours?** <br>
    Office hours and coupons are available at http://chooper.me/office-hours/
