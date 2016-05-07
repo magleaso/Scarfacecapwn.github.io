@@ -14,7 +14,7 @@ $(document).ready(function() {
      */
     var INITIAL_DURATION = 5000; 
     /** minimum number of ms before player can lose */
-    var MINIMUM_DURATION = 1000;
+    var MINIMUM_DURATION = 300;
     /** current number of seconds before player loses */
     var currentDuration = INITIAL_DURATION;
     /** determines how quickly currentDuration decreases */
